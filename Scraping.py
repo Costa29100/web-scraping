@@ -1,96 +1,107 @@
 import requests
-import pandas as pd
-from datetime import datetime
-import sys
+import time
+import os
 
-# ⚙️ Identifiants Pôle emploi 
-CLIENT_ID = ""
-CLIENT_SECRET = ""
+# === ⚙️ CONFIGURATION ===
+TOKEN = os.getenv("") 
+CHAT_ID = os.getenv("")
 
-# URL du token
-URL_TOKEN = ""
+CRYPTO_IDS = ["bitcoin", "ethereum", "pepe", "shiba-inu"]
+SEUIL_VARIATION = 5       # % de variation pour alerte
+INTERVAL = 300            # 5 minutes
 
-# Délai maximal d’attente (en secondes)
-TIMEOUT = 15
+last_prices = {}
 
 
-def get_token():
-    """Récupère le token d'accès OAuth2"""
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "scope": "api_offresdemploiv2 o2dsoffre"
-    }
-
+# === 💬 FONCTIONS TELEGRAM ===
+def send_telegram_message(message: str):
+    """Envoie un message sur Telegram"""
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    data = {"chat_id": CHAT_ID, "text": message}
     try:
-        r = requests.post(URL_TOKEN, headers=headers, data=data, timeout=TIMEOUT)
-        r.raise_for_status()
-        token = r.json()["access_token"]
-        return token
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Erreur lors de la récupération du token : {e}")
-        print("→ Vérifie ta connexion Internet ou réessaie plus tard.")
-        sys.exit(1)
+        requests.post(url, data=data)
+    except Exception as e:
+        print(f"Erreur Telegram : {e}")
 
 
-def get_jobs(token, mots_cles="BTP", range_start=0, range_end=99, publiee_depuis=30):
-    """Récupère les offres depuis l'API Pôle emploi"""
-    url = "https://api.pole-emploi.io/partenaire/offresdemploi/v2/offres/search"
-    headers = {"Authorization": f"Bearer {token}"}
-    params = {
-        "motsCles": mots_cles,
-        "range": f"{range_start}-{range_end}",
-        "publieeDepuis": publiee_depuis
-    }
-
+def get_telegram_updates(offset=None):
+    """Récupère les messages/commandes envoyés au bot"""
+    url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
+    params = {"timeout": 10, "offset": offset}
     try:
-        r = requests.get(url, headers=headers, params=params, timeout=TIMEOUT)
-        r.raise_for_status()
-        offres = r.json().get("resultats", [])
-        return offres
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Erreur lors de la récupération des offres : {e}")
-        sys.exit(1)
+        response = requests.get(url, params=params)
+        return response.json().get("result", [])
+    except Exception as e:
+        print(f"Erreur lors de la récupération des updates : {e}")
+        return []
 
 
-def save_to_excel(jobs, filename="offres_pole_emploi.xlsx"):
-    """Sauvegarde les offres dans un fichier Excel"""
-    if not jobs:
-        print("⚠️ Aucune offre trouvée.")
-        return
-
-    data = []
-    for job in jobs:
-        data.append({
-            "Intitulé": job.get("intitule", ""),
-            "Entreprise": job.get("entreprise", {}).get("nom", ""),
-            "Lieu": job.get("lieuTravail", {}).get("libelle", ""),
-            "Date publication": job.get("dateCreation", ""),
-            "Contrat": job.get("typeContrat", ""),
-            "Description": job.get("description", ""),
-            "URL": job.get("url", "")
-        })
-
-    df = pd.DataFrame(data)
-    df.to_excel(filename, index=False)
-    print(f"✅ Fichier Excel créé : {filename}")
+# === 📊 FONCTIONS CRYPTO ===
+def get_prices():
+    """Récupère les prix des cryptos depuis CoinGecko"""
+    ids = ",".join(CRYPTO_IDS)
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=usd"
+    response = requests.get(url)
+    return response.json()
 
 
-def main():
-    print("🚀 Démarrage scraper Pôle emploi:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+def check_variations():
+    """Vérifie les variations et envoie une alerte si nécessaire"""
+    global last_prices
+    prices = get_prices()
+    messages = []
 
-    print("🔑 Récupération du token...")
-    token = get_token()
-    print("✅ Token récupéré !")
+    for coin in CRYPTO_IDS:
+        new_price = prices[coin]["usd"]
+        old_price = last_prices.get(coin)
 
-    print("📡 Récupération des offres...")
-    jobs = get_jobs(token, mots_cles="BTP", range_start=0, range_end=199, publiee_depuis=30)
-    print(f"🔹 {len(jobs)} offres récupérées.")
+        if old_price:
+            variation = ((new_price - old_price) / old_price) * 100
+            if abs(variation) >= SEUIL_VARIATION:
+                messages.append(f"💰 {coin.upper()} a bougé de {variation:.2f}% → {new_price}$")
 
-    save_to_excel(jobs)
+        last_prices[coin] = new_price
+
+    if messages:
+        send_telegram_message("\n".join(messages))
 
 
-if __name__ == "__main__":
-    main()
+def get_trending_coins():
+    """Récupère les cryptos en tendance sur CoinGecko"""
+    url = "https://api.coingecko.com/api/v3/search/trending"
+    response = requests.get(url).json()
+    coins = response.get("coins", [])
+    return [coin["item"]["name"] for coin in coins]
+
+
+# === 🧠 GESTION DES COMMANDES ===
+def handle_command(text: str):
+    """Analyse et exécute les commandes Telegram"""
+    global SEUIL_VARIATION
+
+    if text.startswith("/prix"):
+        prices = get_prices()
+        message = "📊 Prix actuels :\n"
+        for coin in CRYPTO_IDS:
+            message += f"{coin.upper()}: {prices[coin]['usd']} $\n"
+        send_telegram_message(message)
+
+    elif text.startswith("/seuil"):
+        try:
+            new_seuil = float(text.split(" ")[1])
+            SEUIL_VARIATION = new_seuil
+            send_telegram_message(f"⚙️ Seuil mis à jour : {SEUIL_VARIATION}%")
+        except Exception:
+            send_telegram_message("❌ Utilise `/seuil 5` pour définir un seuil")
+
+    elif text.startswith("/tendance"):
+        try:
+            coins = get_trending_coins()
+            message = "🔥 Cryptos en tendance :\n" + "\n".join(coins)
+            send_telegram_message(message)
+        except Exception as e:
+            send_telegram_message(f"Erreur lors du scan des tendances : {e}")
+
+
+# === 🔁 BOUCLE PRINCIPALE ===
+if __name__ == "__main
