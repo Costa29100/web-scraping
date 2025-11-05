@@ -1,0 +1,63 @@
+> **🧱 Stack Technique — Utilisation**
+
+**🐍 Python  > 🔧 Langage principal utilisé pour développer le bot**
+Gère toute la logique métier (analyse, filtrage, gestion des commandes).
+Avantage : langage simple, robuste, parfait pour l’automatisation.
+Utilisé avec les librairies : requests, json, telegram.ext, logging.
+> 
+
+<aside>
+💡
+
+> 📊 **CoinGecko API > 🧠 Source de données crypto en temps réel**
+Accès aux prix, variations sur 24h, volumes, tendances, nouveaux tokens.
+Sert à construire :
+🔼 Top 5 Pump
+🔽 Top 5 Dump
+💎 Altcoins long terme
+🤡 Shitcoins spéculatifs
+Appelée via requests avec tri logique dans le code.
+> 
+</aside>
+
+<aside>
+💡
+
+> 🤖 **Telegram Bot API > 📬 Canal de communication automatisé**
+Envoie les rapports et alertes directement dans un groupe Telegram.
+Utilise python-telegram-bot pour :
+Lancer les commandes /start, /scan_crypto, etc.
+Afficher les alertes avec format Markdown et liens cliquables.
+Utilisateurs non autorisés filtrés avec leur user_id.
+> 
+</aside>
+
+<aside>
+💡
+
+> 🔎 **API > 🛰️ Scanner de nouveaux tokens sur les DEX (Uniswap, PancakeSwap, etc.)**
+Détecte automatiquement :
+Les nouvelles paires
+Le volume de trading 24h
+La liquidité
+La FDV (valuation diluée)
+> 
+
+> Tokens filtrés avec des critères de qualité :
+Liquidité > 5 000 $
+Volume > 10 000 $
+FDV < 500 000 $
+> 
+</aside>
+
+<aside>
+💡
+
+> 📁 **JSON + requests > 📡 Stockage local & appels API**
+requests → récupère les données des APIs.
+json → stocke localement les liens déjà publiés (anti-doublon).
+Permet un bot léger, rapide et autonome, sans base de données externe.
+✅ Récap tableau visuel 🧩 Technologie 📌 Utilisation principale
+Python Langage principal du bot, logique métier, automatisation CoinGecko API Analyse de marché crypto : prix, volumes, tendance Telegram Bot API Interface utilisateur, envoi d'alertes formatées DexScreener API Détection de nouveaux tokens sur les DEXJSON + requests Stockage local et appels API
+> 
+</aside>
