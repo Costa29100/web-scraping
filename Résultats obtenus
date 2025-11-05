@@ -1,0 +1,42 @@
+📈 Automatisation complète de la veille crypto
+Le bot permet de remplacer entièrement la veille manuelle réalisée auparavant sur plusieurs sites spécialisés.Il scanne automatiquement les principales sources d’information (CoinGecko, 99Bitcoins, MarketWatch, Whalytics...) et publie les nouveaux contenus sans intervention humaine.
+✅ Résultat :
+Gain de régularité dans la veille
+Aucune redondance grâce au système anti-doublon
+Informations toujours à jour, 24h/24
+
+
+---
+⏱ Gain de temps estimé > 80 %
+En automatisant la recherche, l’analyse, le tri et la publication des données :
+⏳ Avant :
+1 à 2 heures par jour à naviguer entre plusieurs sites
+Risque d’oublier une source ou de passer à côté d’un signal faible
+
+⚙️ Maintenant :
+Une commande = analyse complète en <10 secondes
+Ou exécution automatique à chaque lancement du bot
+
+> 💡 Ce gain de temps permet de se concentrer sur l’interprétation des signaux et la prise de décision stratégique.
+
+
+
+---
+🔔 Alertes Telegram en temps réel
+Grâce à l’intégration avec la Telegram Bot API :
+Les analyses sont envoyées en format Markdown lisible et structuré
+Les utilisateurs reçoivent les résultats directement dans un groupe privé
+Les alertes sur nouveaux tokens sont filtrées et prêtes à l’action
+
+📲 Utilisation sur mobile = accès instantané, sans interface complexe🔒 Sécurité : seuls les utilisateurs autorisés reçoivent les alertes
+
+---
+💡 Base solide pour intégrer d'autres APIs
+Le système est conçu pour être modulaire et scalable.
+🔄 Nouvelles intégrations prévues ou possibles :
+🔮 CoinMarketCap : plus de granularité sur les tokens émergents
+📉 TradingView : signaux techniques, indicateurs de momentum
+🧠 LunarCrush : analyse sociale et sentiment de marché
+📈 Santiment : données on-chain
+
+> L’architecture actuelle permet d’ajouter facilement de nouveaux connecteurs, sans tout reconstruire.
